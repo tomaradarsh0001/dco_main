@@ -17,8 +17,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: AppFont.fontFamily,
-        // ignore: deprecated_member_use
-        accentColor: const Color(0xffD5F274),
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          secondary: const Color(0xffD5F274),
+        ),
       ),
       routes: routes,
       home: Splash(),

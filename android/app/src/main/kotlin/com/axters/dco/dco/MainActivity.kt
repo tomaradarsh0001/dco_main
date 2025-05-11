@@ -1,4 +1,4 @@
-package com.example.dco
+package com.axters.dco.dco
 
 import io.flutter.embedding.android.FlutterActivity
 
