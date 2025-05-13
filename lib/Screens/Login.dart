@@ -7,6 +7,10 @@ import 'package:dco/utilities/app_image.dart';
 import 'package:dco/utilities/app_language.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class Login extends StatefulWidget {
   Login({super.key, required this.title});
@@ -18,6 +22,9 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   bool _passwordVisible = true;
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   _showAlertDialog(BuildContext context) {
     // set up the buttons
@@ -53,6 +60,89 @@ class _LoginState extends State<Login> {
       },
     );
   }
+  void _showSnackBar(BuildContext context, String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final url = Uri.parse("https://nadadev.axters.com/api/web/index.php?r=user/login");
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Username and password are required.'),
+          backgroundColor: Colors.black,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username, 'password': password}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == true) {
+        // ✅ Save user data in shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('username', data['data']['user']['username']);
+        await prefs.setString('email', data['data']['user']['email']);
+        await prefs.setInt('user_id', data['data']['user']['id']);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // ✅ Navigate after short delay to show snackbar
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Home()));
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data['message'] ?? 'Login failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +281,7 @@ class _LoginState extends State<Login> {
                                                             Radius.circular(6)),
                                                   ),
                                                   child: TextFormField(
+                                                    controller: _usernameController,
                                                     style: const TextStyle(
                                                         color: AppColor
                                                             .secondaryColor),
@@ -293,6 +384,7 @@ class _LoginState extends State<Login> {
                                                   //     100,
 
                                                   child: TextFormField(
+                                                    controller: _passwordController,
                                                     style: const TextStyle(
                                                         color: AppColor
                                                             .secondaryColor),
@@ -376,33 +468,31 @@ class _LoginState extends State<Login> {
                                               100,
                                     ),
                                     GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) => Home()));
-                                      },
+                                      onTap: _isLoading ? null : _loginUser,
                                       child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                70 /
-                                                100,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                                6 /
-                                                100,
+                                        width: MediaQuery.of(context).size.width * 0.7,
+                                        height: MediaQuery.of(context).size.height * 0.06,
                                         decoration: const BoxDecoration(
-                                          color: AppColor.themeColor,
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(6)),
+                                          color: AppColor.themeColor, // Keep the color same always
+                                          borderRadius: BorderRadius.all(Radius.circular(6)),
                                         ),
                                         alignment: Alignment.center,
-                                        child: Text(
+                                        child: _isLoading
+                                            ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                            : Text(
                                           AppLanguage.LoginText[language],
                                           style: const TextStyle(
-                                              color: AppColor.secondaryColor,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 18),
+                                            color: AppColor.secondaryColor,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 18,
+                                          ),
                                         ),
                                       ),
                                     ),

@@ -21,7 +21,7 @@ class AppLanguage {
   static const PrimaryMobileNumberText = ['Primary Mobile No.'];
   static const SecondaryMobileNoText = ['Secondary Mobile No.'];
   static const EmailText = ['Email'];
-    static const ClearText = ['Clear'];
+  static const ClearText = ['Clear'];
   static const AddressText = ['Address'];
   static const PermanentAddressText = ['Permanent Address'];
   static const DOBText = ['DOB'];
@@ -31,8 +31,8 @@ class AppLanguage {
   static const SelectStateText = ['Select State'];
   static const CityText = ['City'];
   static const SelectCityText = ['Select City'];
-   static const SelectFromCityText = ['Select From City'];
-    static const SelectToCityText = ['Select To City'];
+  static const SelectFromCityText = ['Select From City'];
+  static const SelectToCityText = ['Select To City'];
   static const LocationText = ['Location'];
   static const EmployeeTypeText = ['Employee Type'];
   static const SelectEmployeeTypeText = ['Select Employee Type'];
